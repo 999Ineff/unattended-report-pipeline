@@ -9,6 +9,8 @@
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
+    "format": "prettier --write .",
+    "lint": "prettier --check . && tsc --noEmit",
     "test": "node --test \"test/**/*.test.ts\"",
     "demo": "node src/daily.ts --deliver send --today 2026-10-19 --base ./demo-data",
     "status": "node src/status.ts --base ./demo-data",
@@ -16,6 +18,7 @@
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
+    "prettier": "^3.9.10",
     "typescript": "^5.9.0"
   }
 }

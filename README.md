@@ -22,13 +22,13 @@ out to be mistakes in the manual files.
 
 ## How it stays safe
 
-| | What | Where |
-|---|---|---|
-| 1 | **Two timers, one entry point.** Pull and build at 05:05 every day; deliver at 08:00 on weekdays. Monday carries Fri + Sat + Sun with no special case, and a holiday just means the next send carries more. Times are in the customer's timezone, not the server's UTC clock. | [`src/schedule.ts`](src/schedule.ts), [`deploy/systemd/`](deploy/systemd/) |
-| 2 | **Never plausible-but-wrong.** It never pulls today, because the day isn't closed. Every row is validated, and the row count must match the switch's own count for that day. A missing day blocks the send, because a report missing Saturday looks normal to everyone who opens it. | [`src/checks.ts`](src/checks.ts), `sendableDays()` |
-| 3 | **Never twice, never lost.** A day is marked sent only *after* the send succeeds. Before sending, it asks the mailbox what the customer already has. An in-flight marker covers a crash between "sent" and "recorded", and a run lock stops the two timers from racing after a reboot. | [`src/deliver.ts`](src/deliver.ts), [`src/ledger.ts`](src/ledger.ts) |
-| 4 | **A watchdog for silence.** A job can report its own failure, but not that it never started. A third timer checks at 08:45 that a run happened, succeeded and actually delivered yesterday. | [`src/watchdog.ts`](src/watchdog.ts) |
-| 5 | **Operable by a human.** One JSON line per run. `status` answers "is it working?" and exits non-zero when not. `touch /etc/report-pipeline/autosend-off` turns sends back into drafts for a person to review, with no deploy. | [`src/runlog.ts`](src/runlog.ts), [`src/status.ts`](src/status.ts) |
+|     | What                                                                                                                                                                                                                                                                                   | Where                                                                      |
+| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| 1   | **Two timers, one entry point.** Pull and build at 05:05 every day; deliver at 08:00 on weekdays. Monday carries Fri + Sat + Sun with no special case, and a holiday just means the next send carries more. Times are in the customer's timezone, not the server's UTC clock.          | [`src/schedule.ts`](src/schedule.ts), [`deploy/systemd/`](deploy/systemd/) |
+| 2   | **Never plausible-but-wrong.** It never pulls today, because the day isn't closed. Every row is validated, and the row count must match the switch's own count for that day. A missing day blocks the send, because a report missing Saturday looks normal to everyone who opens it.   | [`src/checks.ts`](src/checks.ts), `sendableDays()`                         |
+| 3   | **Never twice, never lost.** A day is marked sent only _after_ the send succeeds. Before sending, it asks the mailbox what the customer already has. An in-flight marker covers a crash between "sent" and "recorded", and a run lock stops the two timers from racing after a reboot. | [`src/deliver.ts`](src/deliver.ts), [`src/ledger.ts`](src/ledger.ts)       |
+| 4   | **A watchdog for silence.** A job can report its own failure, but not that it never started. A third timer checks at 08:45 that a run happened, succeeded and actually delivered yesterday.                                                                                            | [`src/watchdog.ts`](src/watchdog.ts)                                       |
+| 5   | **Operable by a human.** One JSON line per run. `status` answers "is it working?" and exits non-zero when not. `touch /etc/report-pipeline/autosend-off` turns sends back into drafts for a person to review, with no deploy.                                                          | [`src/runlog.ts`](src/runlog.ts), [`src/status.ts`](src/status.ts)         |
 
 ## Layout
 
@@ -39,6 +39,7 @@ src/
   checks.ts           row validation, count reconciliation, volume warning
   ledger.ts           sent ledger (atomic), run lock, in-flight marker
   deliver.ts          mailbox dedupe, kill switch, send-then-record
+  report.ts           per-day report files and the delivery batch
   runlog.ts           one structured line per run
   status.ts           health check CLI
   watchdog.ts         "did it actually go out?" CLI
@@ -54,6 +55,7 @@ Needs Node 23.6+ (runs TypeScript directly, no build step).
 
 ```bash
 npm install
+npm run lint        # prettier + tsc
 npm test            # 9 tests: timezone, never-today, Monday batch, gap stop, count mismatch,
                     # failed send keeps the day outstanding, no double send, kill switch
 npm run demo        # a Monday morning against the fake switch: pulls the week, sends one batch
@@ -78,5 +80,5 @@ systemctl list-timers 'report-*'
 
 - A `SwitchClient` for the actual switch API (paginated, rate-limited, one closed day per request).
 - A `Mailer` over SMTP or a provider API, where `deliveredDays()` reads Sent Mail.
-- The customer's real report layout (`toCsv()` is a placeholder for their workbook format).
+- The customer's real report layout (`writeReport()` writes a placeholder CSV).
 - An off-box heartbeat. If the whole server is down, the watchdog is down with it.

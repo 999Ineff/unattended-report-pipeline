@@ -16,7 +16,11 @@ test("never pulls today: the day's call history is not closed yet", () => {
 test("Monday's send carries Friday, Saturday and Sunday", () => {
   const built = new Set(["2026-10-16", "2026-10-17", "2026-10-18"]);
   const sent = new Set(["2026-10-15"]);
-  assert.deepEqual(sendableDays(built, sent, "2026-10-19"), ["2026-10-16", "2026-10-17", "2026-10-18"]);
+  assert.deepEqual(sendableDays(built, sent, "2026-10-19"), [
+    "2026-10-16",
+    "2026-10-17",
+    "2026-10-18",
+  ]);
 });
 
 test("a missing day is a hard stop, even when the batch would look normal", () => {

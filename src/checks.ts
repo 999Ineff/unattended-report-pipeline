@@ -1,16 +1,13 @@
-/**
- * Area 2: the checks that stand between a pull and a customer's inbox.
- *
- * Every check fails closed. A bad day stops the run and pages the operator; it is never
- * "mostly fine" and sent anyway.
- */
-
 import type { CallRecord, Day } from "./adapters/types.ts";
 
-export class ValidationError extends Error {}
-export class CountMismatchError extends Error {}
+export class ValidationError extends Error {
+  override name = "ValidationError";
+}
 
-/** Rows belong to the day they claim, carry what the report needs, and appear once. */
+export class CountMismatchError extends Error {
+  override name = "CountMismatchError";
+}
+
 export function validateRows(rows: CallRecord[], day: Day): void {
   const seen = new Set<string>();
   for (const row of rows) {
@@ -24,35 +21,23 @@ export function validateRows(rows: CallRecord[], day: Day): void {
       throw new ValidationError(`row ${row.id} appears twice on ${day}`);
     }
     if (!Number.isFinite(row.durationSec) || row.durationSec < 0) {
-      throw new ValidationError(`row ${row.id} has an impossible duration`);
+      throw new ValidationError(`row ${row.id} has an invalid duration`);
     }
     seen.add(row.id);
   }
 }
 
-/**
- * The rows we hold must match the switch's own count for the day.
- *
- * This is the check that catches a paginated API quietly stopping at page 40, or a pull that
- * ran before the day closed. Both produce a file that opens fine and is wrong.
- */
+/** Catches truncated pagination and early pulls, both of which produce files that look fine. */
 export function reconcile(day: Day, rowsHeld: number, switchCount: number): void {
   if (rowsHeld !== switchCount) {
-    throw new CountMismatchError(
-      `${day}: holding ${rowsHeld} rows but the switch reports ${switchCount}`,
-    );
+    throw new CountMismatchError(`${day}: holding ${rowsHeld} rows, switch reports ${switchCount}`);
   }
 }
 
-/**
- * A soft signal, not a failure: a day far below the recent norm.
- *
- * Volume legitimately dips on weekends and holidays, so this warns instead of blocking.
- * The run log records it, and the watchdog can surface a trend.
- */
-export function volumeWarning(rows: number, recentWeekdayAverage: number): string | null {
-  if (recentWeekdayAverage > 0 && rows < recentWeekdayAverage * 0.25) {
-    return `only ${rows} rows against a recent average of ${Math.round(recentWeekdayAverage)}`;
+/** Warns rather than blocks: weekends and holidays legitimately run low. */
+export function volumeWarning(rows: number, baseline: number): string | null {
+  if (baseline > 0 && rows < baseline * 0.25) {
+    return `only ${rows} rows against a baseline of ${baseline}`;
   }
   return null;
 }
