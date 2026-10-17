@@ -1,0 +1,9 @@
+[Unit]
+Description=Check the report 45 minutes after it should have gone out
+
+[Timer]
+OnCalendar=*-*-* 08:45:00 America/New_York
+Persistent=true
+
+[Install]
+WantedBy=timers.target

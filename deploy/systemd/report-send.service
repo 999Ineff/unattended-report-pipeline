@@ -1,0 +1,13 @@
+[Unit]
+Description=Daily report: build anything missing, then deliver outstanding days
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=report
+WorkingDirectory=/opt/report-pipeline
+EnvironmentFile=/etc/report-pipeline/report.env
+ExecStart=/usr/bin/node src/daily.ts --deliver send --base /var/lib/report-pipeline
+# May wait up to 30 minutes on the shared run lock behind a slow 05:05 catch-up.
+TimeoutStartSec=3600

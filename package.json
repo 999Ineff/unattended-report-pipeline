@@ -1,0 +1,21 @@
+{
+  "name": "unattended-report-pipeline",
+  "version": "0.1.0",
+  "description": "A daily report that pulls, checks, builds and delivers itself on a VPS, and refuses to send anything plausible but wrong.",
+  "type": "module",
+  "private": true,
+  "engines": {
+    "node": ">=23.6"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "node --test \"test/**/*.test.ts\"",
+    "demo": "node src/daily.ts --deliver send --today 2026-10-19 --base ./demo-data",
+    "status": "node src/status.ts --base ./demo-data",
+    "watchdog": "node src/watchdog.ts --base ./demo-data --today 2026-10-19"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "typescript": "^5.9.0"
+  }
+}

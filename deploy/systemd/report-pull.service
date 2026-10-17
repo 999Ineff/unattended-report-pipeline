@@ -1,0 +1,13 @@
+[Unit]
+Description=Daily report: pull and build yesterday (no delivery)
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=report
+WorkingDirectory=/opt/report-pipeline
+EnvironmentFile=/etc/report-pipeline/report.env
+ExecStart=/usr/bin/node src/daily.ts --deliver none --base /var/lib/report-pipeline
+# A catch-up after an outage pulls a week of days, one rate-limited request at a time.
+TimeoutStartSec=1800

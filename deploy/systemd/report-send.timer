@@ -1,0 +1,10 @@
+[Unit]
+Description=Deliver at 08:00 customer time (the job itself skips weekends)
+
+[Timer]
+OnCalendar=*-*-* 08:00:00 America/New_York
+# If the box was down at 08:00, the report goes out when it comes back rather than not at all.
+Persistent=true
+
+[Install]
+WantedBy=timers.target

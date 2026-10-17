@@ -1,0 +1,10 @@
+[Unit]
+Description=Pull and build at 05:05 customer time, every day
+
+[Timer]
+# The server clock is UTC. Naming the customer's timezone keeps 05:05 at 05:05 across DST.
+OnCalendar=*-*-* 05:05:00 America/New_York
+Persistent=true
+
+[Install]
+WantedBy=timers.target

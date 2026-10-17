@@ -1,0 +1,9 @@
+[Unit]
+Description=Daily report: alert if this morning's run never happened, failed, or did not deliver
+
+[Service]
+Type=oneshot
+User=report
+WorkingDirectory=/opt/report-pipeline
+EnvironmentFile=/etc/report-pipeline/report.env
+ExecStart=/usr/bin/node src/watchdog.ts --base /var/lib/report-pipeline
